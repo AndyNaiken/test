@@ -1,0 +1,9 @@
+- name: "run command"
+  become: true
+  gather_facts: no
+  hosts: 172.22.2.145
+  tasks: 
+    - name: add user to sudo group
+      shell: usermod -aG sudo hkpe
+      args:
+        executable: /bin/bash

@@ -1,0 +1,8 @@
+---
+- hosts: 172.22.2.145
+  become: yes
+  tasks:
+    - name: Insert a line at the end of a file.
+      lineinfile:
+        path: /etc/resolv.conf
+        line: 'search test.qc'

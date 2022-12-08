@@ -1,0 +1,42 @@
+---
+- hosts: 172.22.2.145
+  become: yes
+  tasks:
+    - name: Update apt cache and make sure the follwing packages is installed for Active Directory Integration
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      loop:
+        - realmd
+        - libnss-sss
+        - libpam-sss
+        - sssd
+        - sssd-tools
+        - adcli
+        - samba-common-bin
+        - oddjob
+        - oddjob-mkhomedir
+        - packagekit
+        
+    - name: Insert a CPU Domain Name at end of resolv file.
+      lineinfile:
+        path: /etc/resolv.conf
+        line: 'search test.qc'
+        
+    - name: Join linux into domain
+      expect:
+        command: /bin/bash -c "/usr/sbin/realm join {{ CPUMASTER3.cpu.qc.ca }} --user={{ anpe@cpu.qc.ca }}"
+        responses:
+          Password.*: "{{ P@ssw0rd2022 }}"
+      when: ad_status.rc != 0
+        
+    - name: Allow User Login without FQDN
+      lineinfile: 
+        backup: yes
+        state: present
+        dest: /etc/sssd/sssd.conf
+        regexp: '^{{ item.search }}'
+        line: '{{ item.replace }}'
+      with_items:
+           - { search: 'use_fully_qualified_names', replace: 'use_fully_qualified_names = False' }
+           - { search: 'fallback_homedir', replace: 'fallback_homedir = /home/%u' }
